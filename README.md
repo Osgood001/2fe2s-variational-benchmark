@@ -4,6 +4,58 @@ This directory contains the PRL Letter, Supplemental Material, frozen compact
 results, figure source, and executable analysis used for every reported
 observable. Material numerical work and TeX compilation were run on Bohrium.
 
+## Why this repository exists
+
+The competition submission itself did **not** beat the benchmark: its formal
+512-determinant result was `-116.3704626758453 Eh`. Its execution trace,
+however, described a separate full-space Davidson calculation that had reached
+a substantially lower energy. We reconstructed that route and asked an agent
+to continue the same calculation with explicit checkpoints. The resulting
+normalized state has the directly recomputed Rayleigh quotient
+`-116.60560912042631 Eh`.
+
+This is `0.00018412042631 Eh` (about `184.12 microEh`) below the HCI energy
+`-116.605425 Eh` in [Quantum Advantage Tracker issue
+#187](https://github.com/quantum-advantage-tracker/quantum-advantage-tracker.github.io/issues/187),
+a Tracker submission verified in July 2026. It is therefore a meaningful
+candidate update to the Tracker. It is **not**, however, a new literature-low
+energy: within the reported precision it agrees with the DMRG result
+`-116.6056091 Eh` reported by Li and Chan in 2017
+([DOI: 10.1021/acs.jctc.7b00270](https://doi.org/10.1021/acs.jctc.7b00270)).
+Our present interpretation is that the Tracker has not incorporated that older
+DMRG result for this benchmark.
+
+In short: the reconstructed result improves the value currently displayed by
+the Tracker and is worth submitting there, but it reproduces rather than
+surpasses the best value we found in the existing literature.
+
+## How the methods differ
+
+| Method | Wavefunction representation | Main optimization idea |
+|---|---|---|
+| This work | An explicit coefficient vector in the complete fixed-particle/spin determinant space | Matrix-free Davidson/Ritz minimization using full Hamiltonian actions |
+| HCI | A selected sparse list of important determinants | Heat-bath selection, diagonalization in the selected space, and often a perturbative correction |
+| DMRG | A matrix-product state over an ordered set of orbitals | Tensor sweeps with accuracy controlled primarily by bond dimension and discarded weight |
+
+Thus, all three can supply variational upper bounds when their reported energy
+is evaluated from the variational state, but they compress the many-electron
+state in different ways: this calculation uses the complete determinant
+coordinate space, HCI selects determinants, and DMRG compresses entanglement.
+The saved state here is not fully converged, so the number above is an explicit
+variational upper bound, not a certified exact ground-state energy.
+
+## Starting point and provenance
+
+The final production continuation was warm-started from an intermediate
+full-space Davidson vector reconstructed while following the contestant
+trace. That intermediate state was already below the Tracker HCI value. We did
+**not** import the 2017 DMRG wavefunction, MPS tensors, or coefficients, and did
+not initialize the solver from the published DMRG energy. The DMRG number was
+identified during the subsequent literature comparison and is used here to
+interpret the result, not to generate it. Consequently, the numerical lineage
+supports a Tracker update, while the literature comparison prevents us from
+claiming a new state of the art.
+
 ## Scientific objects
 
 - Hamiltonian: `2fe_2s_30e_20o.fcidump`, SHA-256
