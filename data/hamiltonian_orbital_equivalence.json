@@ -1,0 +1,159 @@
+{
+  "byte_identical": false,
+  "canonical_eri_allclose_rtol0_atol1e-10": true,
+  "canonical_eri_max_abs_difference": 1.2055287323953223e-13,
+  "canonical_eri_rms_difference": 3.080480724230443e-15,
+  "eigenvector_signs": [
+    1,
+    -1,
+    -1,
+    -1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    -1,
+    -1,
+    -1,
+    -1,
+    1,
+    1,
+    -1,
+    -1,
+    1,
+    1
+  ],
+  "eri_frobenius_a": 6.928282451844187,
+  "eri_frobenius_b": 6.92828245184419,
+  "h1_eigenvalue_max_abs_difference": 2.1316282072803006e-14,
+  "h1_rotation_max_abs_difference": 3.552713678800501e-14,
+  "headers": {
+    "ECORE": {
+      "a": 0.0,
+      "b": 0.0,
+      "equal": true
+    },
+    "MS2": {
+      "a": 0,
+      "b": 0,
+      "equal": true
+    },
+    "NELEC": {
+      "a": 30,
+      "b": 30,
+      "equal": true
+    },
+    "NORB": {
+      "a": 20,
+      "b": 20,
+      "equal": true
+    }
+  },
+  "interpretation": "The files differ in orbital basis but represent the same many-electron Hamiltonian to FCIDUMP numerical precision.",
+  "minimum_h1_eigenvalue_gap": 0.016042171767706392,
+  "path_a": "/home/input_lbg-18805-23181210/tracker.fcidump",
+  "path_b": "/home/input_lbg-18805-23181210/qmb.fcidump",
+  "rotation_orthogonality_max_abs_difference": 3.1086244689504383e-15,
+  "schema_version": "fcidump-orbital-equivalence/v1",
+  "sha256_a": "bd6ef31773f7b082171f73faa6c98924948e2c250b6fbec74504d64361c8c6c7",
+  "sha256_b": "95d8786af06eeea2107e19ffd98c66a6ca97fc8c9864175a4f6d64512b6f2df9",
+  "sign_witnesses": [
+    {
+      "minimum_abs_integral": 0.010147445472030791,
+      "orbital": 17,
+      "reference": 0
+    },
+    {
+      "minimum_abs_integral": 0.01232044527301543,
+      "orbital": 12,
+      "reference": 17
+    },
+    {
+      "minimum_abs_integral": 0.010986818965324585,
+      "orbital": 16,
+      "reference": 17
+    },
+    {
+      "minimum_abs_integral": 0.007130413214747979,
+      "orbital": 10,
+      "reference": 16
+    },
+    {
+      "minimum_abs_integral": 0.027201881466794142,
+      "orbital": 8,
+      "reference": 10
+    },
+    {
+      "minimum_abs_integral": 0.023281979755894886,
+      "orbital": 9,
+      "reference": 8
+    },
+    {
+      "minimum_abs_integral": 0.012553855959536389,
+      "orbital": 3,
+      "reference": 10
+    },
+    {
+      "minimum_abs_integral": 0.006037360532077531,
+      "orbital": 13,
+      "reference": 12
+    },
+    {
+      "minimum_abs_integral": 0.01714166864927012,
+      "orbital": 7,
+      "reference": 13
+    },
+    {
+      "minimum_abs_integral": 0.008057782784344087,
+      "orbital": 1,
+      "reference": 13
+    },
+    {
+      "minimum_abs_integral": 0.01038667442290375,
+      "orbital": 4,
+      "reference": 1
+    },
+    {
+      "minimum_abs_integral": 0.015835898069411287,
+      "orbital": 11,
+      "reference": 4
+    },
+    {
+      "minimum_abs_integral": 0.018475130704667102,
+      "orbital": 5,
+      "reference": 11
+    },
+    {
+      "minimum_abs_integral": 0.010157325361833003,
+      "orbital": 6,
+      "reference": 11
+    },
+    {
+      "minimum_abs_integral": 0.008783059817098255,
+      "orbital": 18,
+      "reference": 1
+    },
+    {
+      "minimum_abs_integral": 0.041382522772875664,
+      "orbital": 19,
+      "reference": 18
+    },
+    {
+      "minimum_abs_integral": 0.010984225606895761,
+      "orbital": 14,
+      "reference": 19
+    },
+    {
+      "minimum_abs_integral": 0.014401070638233851,
+      "orbital": 15,
+      "reference": 14
+    },
+    {
+      "minimum_abs_integral": 0.005243191300367958,
+      "orbital": 2,
+      "reference": 9
+    }
+  ]
+}

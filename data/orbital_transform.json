@@ -1,0 +1,56 @@
+{
+  "energy_difference_from_reference_eh": 3.126388037344441e-13,
+  "energy_difference_natural_minus_source_eh": 3.126388037344441e-13,
+  "gates": {
+    "norm_invariance": true,
+    "rotation_orthogonality": true,
+    "same_job_energy_invariance": true,
+    "same_job_residual_invariance": true,
+    "small_system_complementary_minor": true,
+    "source_reference_energy": true,
+    "source_reference_residual": true,
+    "transformed_reference_energy": true,
+    "transformed_reference_residual": true
+  },
+  "generated_at_unix": 1786252435.473312,
+  "host": "dp-lbg-18805-23182180",
+  "natural_fcidump_sha256": "adb401872023da5b0345ac473a121961d0553f9ddaaa808072423b0a6b24b2aa",
+  "numpy_version": "2.5.1",
+  "output_vector_bytes": 1922992256,
+  "output_vector_sha256": "3855dcb7ce8c44b0f6d9c99fc5787aa2db339002b4d50ec2af8a814c45372d77",
+  "output_vector_shape": [
+    15504,
+    15504
+  ],
+  "pyscf_version": "2.14.0",
+  "python_version": "3.12.1",
+  "residual_difference_from_reference_eh": 3.9846229783855203e-17,
+  "residual_difference_natural_minus_source_eh": 1.115379337691567e-16,
+  "rotation_determinant": -1.0000000000000027,
+  "rotation_orthogonality_max_abs": 2.4424906541753444e-15,
+  "rotation_sha256": "3a3dcbdfac4cd66568c66c097fc2ca056a6dbc6027016e0aa63501acf5626532",
+  "schema_version": "2fe2s-ci-orbital-transform/v2",
+  "small_system_gate": {
+    "max_abs_direct_vs_complementary_minor": 2.498001805406602e-16,
+    "nelec_alpha": 4,
+    "norb": 6,
+    "passed": true
+  },
+  "source_energy_difference_from_reference_eh": 0.0,
+  "source_energy_eh": -116.60560912042631,
+  "source_fcidump_sha256": "bd6ef31773f7b082171f73faa6c98924948e2c250b6fbec74504d64361c8c6c7",
+  "source_norm2": 0.999999999999999,
+  "source_residual_difference_from_reference_eh": -7.16917039853015e-17,
+  "source_residual_eh": 6.901557705406358e-07,
+  "source_vector_sha256": "45e63bb63cd10e953260b6f5dabb8a1dda5518fbf5959002c23888dacb599945",
+  "threads": 64,
+  "timing": {
+    "five_hole_transform_s": 192.79517269134521,
+    "mapping_from_holes_s": 1.5998961925506592,
+    "mapping_to_holes_s": 1.4552295207977295
+  },
+  "transformed_energy_eh": -116.605609120426,
+  "transformed_norm2": 0.9999999999999851,
+  "transformed_residual_eh": 6.901557706521737e-07,
+  "wall_s": 350.39623618125916
+}

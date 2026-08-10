@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "data": {
+    "id": 23182345,
+    "bohrId": 20529398,
+    "jobName": "2fe2s-prl-natural-basis-replay-v3",
+    "jobGroupId": 16451204,
+    "jobGroupName": "2fe2s-prl-natural-basis-replay-v3",
+    "webStatus": 2,
+    "status": 2,
+    "phase": "completed",
+    "terminal": true,
+    "spendTime": 1522,
+    "cost": "216",
+    "errorInfo": "",
+    "createTime": "2026-08-09 14:03:59",
+    "endTime": "2026-08-09 14:32:46",
+    "runningStartAt": 1786255512,
+    "runningEndAt": 1786257153,
+    "imageName": "registry.dp.tech/dptech/dp/native/prod-2616583/4549011/p2a-agent-runtime:v12",
+    "machineType": "c64_m128_cpu",
+    "cmd": "bash run_natural_basis_replay_v3.sh",
+    "platform": "",
+    "region": "",
+    "exitCode": 0
+  },
+  "notice": {
+    "billing": {
+      "balance": {
+        "amount": "14568.49",
+        "currency": "CNY"
+      },
+      "sufficient": true
+    }
+  },
+  "meta": {
+    "request_id": "eaa6fe80-20db-45a4-b7b5-88682cf46e1a",
+    "cli_version": "2.5.9",
+    "command": "bohr job describe",
+    "duration_ms": 250,
+    "timestamp": 1786257319
+  }
+}

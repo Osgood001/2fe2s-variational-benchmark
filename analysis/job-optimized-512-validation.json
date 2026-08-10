@@ -1,0 +1,12 @@
+{
+  "job_name": "2fe2s-prl-optimized-512-validation-v1",
+  "command": "bash run_optimized_512_validation.sh",
+  "log_file": "output/validation.log",
+  "backward_files": ["output"],
+  "project_id": 3732438,
+  "machine_type": "c64_m128_cpu",
+  "image_address": "registry.dp.tech/dptech/dp/native/prod-2616583/4549011/p2a-agent-runtime:v12",
+  "max_run_time": 60,
+  "max_reschedule_times": 1,
+  "nnode": 1
+}

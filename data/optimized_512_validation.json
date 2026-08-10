@@ -1,0 +1,28 @@
+{
+  "determinants": 512,
+  "energy_clean_room_slater_condon_eh": -116.37046267584526,
+  "energy_path_difference_eh": 1.7053025658242404e-13,
+  "energy_pyscf_direct_contraction_eh": -116.37046267584509,
+  "fcidump_sha256": "bd6ef31773f7b082171f73faa6c98924948e2c250b6fbec74504d64361c8c6c7",
+  "full_space_residual_eh": 0.2145288386074579,
+  "gates": {
+    "determinant_count": true,
+    "independent_energy_agreement": true,
+    "norm": true,
+    "projected_stationarity": true
+  },
+  "generated_at_unix": 1786251302.4222968,
+  "host": "dp-lbg-18805-23182139",
+  "interpretation": "The projected residual tests coefficient stationarity in the fixed 512-determinant support; the full residual is not expected to vanish.",
+  "norm2_clean_room": 1.0000000000000007,
+  "norm2_pyscf_embedding": 1.0000000000000007,
+  "numpy_version": "2.5.1",
+  "projected_subspace_residual_eh": 8.680176318044445e-14,
+  "pyscf_version": "2.14.0",
+  "python_version": "3.12.1",
+  "schema_version": "2fe2s-optimized-512-validation/v1",
+  "threads": 64,
+  "wall_s": 71.1973044872284,
+  "wavefunction_bytes": 32669,
+  "wavefunction_sha256": "1d9314c2c6e48fe82e45c932e8ca97f59d7156ec95ce7c19facad522f502a267"
+}

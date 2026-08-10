@@ -1,0 +1,487 @@
+\documentclass[aps,prl,onecolumn,superscriptaddress,nofootinbib,longbibliography]{revtex4-2}
+
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs}
+\usepackage{tabularx,array}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{xurl}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  allcolors=blue!55!black,
+  pdftitle={Supplemental Material: Basis-Dependent Sparsity and Energy Recovery in [2Fe--2S]},
+  pdfauthor={Anonymous Authors},
+  pdfsubject={Simulation protocol, numerical validation, and reproducibility data},
+  pdfkeywords={iron-sulfur cluster, Davidson, configuration interaction, natural orbitals, reproducibility}
+}
+
+\newcommand{\Eh}{E_{\mathrm h}}
+\newcommand{\cas}{\mathrm{CAS}(30e,20o)}
+\input{results.tex}
+
+\begin{document}
+
+\title{Supplemental Material for ``Basis-Dependent Sparsity and Energy Recovery in a Strongly Correlated [2Fe--2S] Active Space''}
+\author{Anonymous Authors}
+\affiliation{Affiliations withheld during scientific review}
+\maketitle
+
+This Supplemental Material defines the active-space Hamiltonian, gives the
+complete staged Davidson simulation, documents direct and density-matrix
+replay, derives and validates the natural-orbital transformation, specifies the
+top-\(K\) and Hamiltonian-decomposition experiments, and maps every result to
+an executable script and frozen artifact.  ``Full configuration interaction''
+below always means the complete determinant space of the specified \(\cas\)
+Hamiltonian in the fixed \(M_S=0\) sector; it does not mean full-molecule or
+complete-basis FCI.
+
+\section{Hamiltonian, determinant convention, and public inputs}
+
+The calculation uses a real, spin-independent FCIDUMP with 20 orthonormal
+spatial orbitals, 30 electrons, \(M_S=0\), and \(E_{\mathrm{core}}=0\).  In the
+chemist's integral convention implemented by PySCF,
+\begin{equation}
+ \hat H=\sum_{pq\sigma} h_{pq}a^{\dagger}_{p\sigma}a_{q\sigma}
+ +\frac{1}{2}\sum_{pqrs\sigma\tau}(pq|rs)
+ a^{\dagger}_{p\sigma}a^{\dagger}_{r\tau}a_{s\tau}a_{q\sigma}.
+ \label{eq:s-hamiltonian}
+\end{equation}
+There are 15 alpha and 15 beta electrons.  Each spin sector contains
+\(\binom{20}{15}=15{,}504\) occupation strings, so the CI tensor has shape
+\(15{,}504\times15{,}504\), dimension 240,374,016, and occupies
+1,922,992,256 bytes in little-endian float64 NPY format.
+
+The primary FCIDUMP is retrieved from the immutable content associated with
+Ref.~\cite{qatHamiltonian}; its SHA-256 is
+\begin{quote}\small\ttfamily
+bd6ef31773f7b082171f73faa6c98924948e2c250b6fbec74504d64361c8c6c7.
+\end{quote}
+The second, independently distributed QMB FCIDUMP is retrieved at repository
+revision \path{ab1a7002ccbaca0ac43acafaf0f40400d14c3940} from
+Ref.~\cite{qmbModels}; the uncompressed file has SHA-256
+\begin{quote}\small\ttfamily
+95d8786af06eeea2107e19ffd98c66a6ca97fc8c9864175a4f6d64512b6f2df9.
+\end{quote}
+
+\subsection{Orbital equivalence of the two FCIDUMPs}
+
+The two files are not byte-identical because their active orbitals differ.
+The script \path{code/compare_hamiltonian_orbital_equivalence.py} diagonalizes
+each real symmetric one-electron matrix.  Its spectrum is nondegenerate, with
+a minimum adjacent gap of \(1.6042\times10^{-2}\,\Eh\), so the ordered
+eigenvectors are unique up to column signs.  After fixing the first sign and
+determining the remaining signs from nonzero two-electron witnesses, the
+orthogonal matrix \(U\) is tested against
+\begin{align}
+ h^{(B)}_{pq}&=\sum_{ij}U_{ip}h^{(A)}_{ij}U_{jq},
+ \label{eq:s-rotation-h}\\
+ g^{(B)}_{pqrs}&=\sum_{ijkl}U_{ip}U_{jq}U_{kr}U_{ls}g^{(A)}_{ijkl}.
+ \label{eq:s-rotation-g}
+\end{align}
+The final comparison contracts the complete two-electron tensor without
+screening.  Table~\ref{tab:equivalence} establishes orbital-rotation
+equivalence to the numerical precision of the inputs; it does not attach an
+uncertainty to a rounded literature energy.
+
+\begin{table}[h]
+\caption{Orbital-equivalence checks.  ``Maximum'' denotes the largest
+elementwise absolute difference.}
+\label{tab:equivalence}
+\begin{ruledtabular}
+\begin{tabular}{lc}
+Quantity & Value \\
+\hline
+Maximum ordered \(h\)-eigenvalue difference & \(2.1316\times10^{-14}\,\Eh\) \\
+Maximum defect of \(U^{\mathsf T}U=I\) & \(3.1086\times10^{-15}\) \\
+Maximum rotated one-electron residual & \(3.5527\times10^{-14}\,\Eh\) \\
+RMS complete two-electron-tensor residual & \(3.0805\times10^{-15}\,\Eh\) \\
+Maximum complete two-electron-tensor residual & \(1.2055\times10^{-13}\,\Eh\) \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\section{Checkpointed Davidson simulation}
+
+\subsection{Matrix-free Ritz iteration}
+
+The \(240{,}374{,}016\)-dimensional Hamiltonian matrix is never formed.
+PySCF's \texttt{fci.direct\_spin1} implementation applies the Slater--Condon
+Hamiltonian to a CI tensor.  At update \(m\), an orthonormal trial basis
+\(V_m\) defines
+\begin{equation}
+ T_m=V_m^{\mathsf T}HV_m.
+\end{equation}
+The lowest eigenpair \((\theta_m,y_m)\) of \(T_m\) gives the Ritz vector
+\(c_m=V_my_m\) and residual \(r_m=Hc_m-\theta_mc_m\).  A diagonally
+preconditioned correction expands the basis; the iteration restarts when the
+configured subspace capacity is reached.  We set
+\texttt{davidson\_only=True} and \texttt{pspace\_size=800} so the reported path
+is iterative throughout.
+
+The implementation in \path{code/continue_fci_checkpointed.py} adds three
+reproducibility safeguards.  First, it hashes the FCIDUMP and input vector
+before numerical work.  Second, every eighth callback writes the current Ritz
+vector to a temporary NPY, flushes and synchronizes it, and atomically renames
+it.  Third, after each stage it reloads the saved endpoint, constructs \(Hc\),
+and recomputes the norm, Rayleigh quotient, and residual.  Consequently, every
+reported endpoint is an observable of a concrete coefficient tensor rather
+than an extrapolation or a printed scalar.
+
+\subsection{Complete staged protocol}
+
+Table~\ref{tab:stages} gives every stage used to obtain the reported state.
+Stage A starts from PySCF's default determinant-space initial guess.  B1 tests
+and establishes a wider 64-vector restart.  B2 creates the synchronized input
+for the 160-update production stage C.  Only the explicit vector listed for a
+stage is passed to the next one.
+
+\begin{table*}[t]
+\caption{Davidson stages.  Energies and residuals are direct contractions of
+the saved endpoint.  The update limit is a numerical stop, not a convergence
+claim.}
+\label{tab:stages}
+\small
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}Xrrcccl@{}}
+\toprule
+Stage & Updates & Space & Energy (\(\Eh\)) & Residual (\(\Eh\)) & \(E\) tol. & Vector SHA-256 prefix \\
+\midrule
+A: initialization & 110 & 14 & \(-116.6055095343891\) & \(2.8201\times10^{-3}\) & \(10^{-10}\) & \texttt{3b20ec2e1aa3} \\
+B1: wide restart & 2 & 64 & \(-116.6055107620259\) & \(2.0814\times10^{-3}\) & \(10^{-13}\) & \texttt{cc9350d4bdad} \\
+B2: checkpoint & 16 & 64 & \(-116.6055790186671\) & \(4.1575\times10^{-3}\) & \(10^{-13}\) & \texttt{1664c06a55c7} \\
+C: production & 160 & 64 & \(-116.60560912042631\) & \(6.9016\times10^{-7}\) & \(10^{-13}\) & \texttt{45e63bb63cd1} \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+Stages B and C used the residual target \(10^{-8}\,\Eh\), 64 software
+threads, a 512-GiB node allocation, and reported maximum memory 450,000 MB.
+The production eigensolver wall time was 23,387.508 s.  The complete driver,
+including initial and final contractions, checkpoint input/output, and hashing,
+took 23,494.156 s.  The final solver flag is
+\texttt{converged=false}: the 160-update limit was exhausted while the residual
+remained above its target.
+
+The final coefficient tensor is \path{fci_ritz_vector.npy}, with SHA-256
+\begin{quote}\small\ttfamily
+45e63bb63cd10e953260b6f5dabb8a1dda5518fbf5959002c23888dacb599945.
+\end{quote}
+Every downstream script asserts this hash, the FCIDUMP hash, the tensor shape,
+and float64 dtype before evaluating a reported quantity.
+
+\section{Fresh-process replay and numerical stability}
+
+The script \path{code/verify_publication_state.py} starts in a fresh Python
+process and does not import the optimization driver.  It evaluates the energy
+by two paths.  The first absorbs the one-electron integrals into the
+two-electron contraction and explicitly constructs \(H_{\mathrm{el}}c\):
+\begin{align}
+ N&=\langle c|c\rangle,\\
+ E_{Hc}&=E_{\mathrm{core}}+
+ \frac{\langle c|H_{\mathrm{el}}|c\rangle}{N},\\
+ \rho&=\frac{\lVert H_{\mathrm{el}}c-(E_{Hc}-E_{\mathrm{core}})c\rVert_2}
+ {\sqrt N}.
+\end{align}
+The second constructs separate one- and two-particle reduced density matrices
+and evaluates
+\begin{equation}
+ E_{\mathrm{RDM}}=E_{\mathrm{core}}
+ +\sum_{pq}h_{pq}\gamma_{qp}
+ +\frac{1}{2}\sum_{pqrs}g_{pqrs}\Gamma_{pqrs}.
+ \label{eq:s-rdm}
+\end{equation}
+Both paths use PySCF, but they have distinct contraction routes; ``replay'' does
+not mean a second electronic-structure library.  Results appear in
+Table~\ref{tab:replay}.
+
+\begin{table}[h]
+\caption{Fresh-process observables of the saved state.}
+\label{tab:replay}
+\begin{ruledtabular}
+\begin{tabular}{lc}
+Quantity & Value \\
+\hline
+Squared norm & \(0.999999999999999\) \\
+Direct Rayleigh energy & \(-116.60560912042631\,\Eh\) \\
+RDM-reconstructed energy & \(-116.60560912042571\,\Eh\) \\
+Absolute energy-path difference & \(5.9686\times10^{-13}\,\Eh\) \\
+Residual norm & \(6.9016\times10^{-7}\,\Eh\) \\
+Energy variance \(\rho^2\) & \(4.7631\times10^{-13}\,\Eh^2\) \\
+\(\langle \hat S^2\rangle\) & \(2.8570\times10^{-9}\) \\
+Spin multiplicity & \(1.0000000057\) \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+Two PySCF kernels also accumulated the spin-summed one-particle RDM through
+different paths.  On the 240-million-component tensor their maximum
+elementwise difference was \(1.7360\times10^{-10}\), at diagonal element
+\((16,16)\), and therefore exceeded an initially chosen \(10^{-10}\) absolute
+comparison.  The subsequent stability calculation found a relative Frobenius
+difference \(8.4093\times10^{-11}\), zero reported symmetry defect in either
+RDM, and traces 29.999999997413795 and 29.999999999999968.  Equation
+(\ref{eq:s-rdm}) retained sub-pico-Hartree agreement with the direct energy.
+We report this as an accumulation-order stability study rather than replacing
+the initial comparison by a looser undeclared threshold.
+
+\section{Exact natural-orbital representation of the same state}
+
+The real symmetric, spin-summed one-particle RDM is symmetrized and
+diagonalized,
+\begin{equation}
+ \frac{\gamma+\gamma^{\mathsf T}}{2}U
+ =U\,\mathrm{diag}(n_1,\ldots,n_{20}),
+ \qquad U^{\mathsf T}U=I.
+\end{equation}
+The natural occupations sum to 29.9999999974.  Ten values are strongly
+fractional, ranging from 0.604296 to 1.468175; the complete ordered list is
+stored in \path{data/natural_occupations.csv}.  The maximum off-diagonal RDM
+element after rotation is \(1.07\times10^{-15}\), and the maximum
+orthogonality defect of \(U\) is \(2.44\times10^{-15}\).
+
+The integral tensors are transformed with the same \(U\) according to
+Eqs.~(\ref{eq:s-rotation-h}) and (\ref{eq:s-rotation-g}).  The determinant
+transformation for one spin sector is
+the exterior-power representation of \(U\): a matrix element between two
+occupation strings is the corresponding 15-by-15 minor.  Direct evaluation of
+all such minors is unnecessarily expensive because the sector contains only
+five holes.  Jacobi's complementary-minor identity,
+\begin{equation}
+ \det U_{I,J}=(-1)^{\Sigma I+\Sigma J}\det(U)
+ \det\!\left[(U^{-1})_{J^c,I^c}\right],
+ \label{eq:jacobi}
+\end{equation}
+maps every 15-electron minor to a 5-hole minor.  The script
+\path{analysis/transform_ci_natural_basis.py} maps the electron tensor to the
+hole ordering, calls PySCF's determinant transformation in the five-hole
+sector, restores electron ordering and parity, and writes the transformed
+float64 tensor.  A seeded six-orbital, four-electron test compares the direct
+electron and complementary-minor paths and gives maximum difference
+\(2.50\times10^{-16}\).
+
+The source and transformed tensors are contracted in the same hash-locked
+process before any sparsity analysis.  Table~\ref{tab:natural-gates} shows that
+the transformation changes representation but not the physical state.  The
+natural-basis FCIDUMP, rotation, and transformed vector have SHA-256 values
+\texttt{adb401872023...}, \texttt{3a3dcbdfac4c...}, and
+\texttt{3855dcb7ce8c...}, respectively; their full hashes are recorded in the
+manifest.
+
+\begin{table}[h]
+\caption{Same-process orbital-transformation checks.}
+\label{tab:natural-gates}
+\begin{ruledtabular}
+\begin{tabular}{lccc}
+Quantity & Benchmark basis & Natural basis & Difference \\
+\hline
+Squared norm & 0.999999999999999 & 0.999999999999985 & \(1.39\times10^{-14}\) \\
+Energy (\(\Eh\)) & \(-116.60560912042631\) & \(-116.60560912042600\) & \(3.13\times10^{-13}\) \\
+Residual (\(\Eh\)) & \(6.9015577054\times10^{-7}\) & \(6.9015577065\times10^{-7}\) & \(1.12\times10^{-16}\) \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+An independent frozen-vector calculation further tests the direction of the
+orbital transformation, rather than only its spectrum.  Before reading either
+FCIDUMP or CI tensor, it verifies the SHA-256 of the benchmark-basis occupation
+list, 
+\texttt{2e9632ff525337eae6329eac5cd5e39b71bd08af85291a335033296b5a732b7d}.
+It then constructs the one-particle RDM directly in the natural representation
+and compares the complete symmetrized matrix elementwise with the diagonal
+matrix made from that frozen list.  The final trace is
+\(\NaturalReplayTrace\), compared with
+\(N\langle c|c\rangle=\NaturalReplayExpectedTrace\); the absolute difference
+is \(\NaturalReplayTraceError\).  The maximum raw symmetry defect,
+off-diagonal element, complete-matrix difference, and occupation-eigenvalue
+difference are \(\NaturalReplayRDMSymmetry\),
+\(\NaturalReplayRDMOffDiagonal\),
+\(\NaturalReplayRDMReferenceDifference\), and
+\(\NaturalReplayOccupationsDifference\), respectively.
+
+A preliminary replay used an absolute trace threshold of \(10^{-8}\) and
+returned a trace of 29.999999987374895, approximately
+\(1.26\times10^{-8}\) from \(N\langle c|c\rangle\).  Before the final replay,
+we fixed a \(2\times10^{-8}\) absolute tolerance and added the stronger
+direction-sensitive complete-matrix comparison above; neither threshold nor
+test was altered after observing the final output.  This records the
+accumulation-level numerical tolerance without converting it into a physical
+uncertainty on the energy.
+
+\section{Top-\texorpdfstring{\(K\)}{K} projections and exact decomposition}
+
+For each orbital representation, the streaming ranking in
+\path{analysis/analyze_state_compressibility.py} retains the exact global
+largest 4,194,304 values of \(|c_I|^2\).  At each input block it keeps the
+block's local candidates, merges them with the current global set, and applies
+an exact partition; a final stable sort fixes descending order.  The 17 support
+sizes are
+\begin{multline}
+ K=64,128,256,512,1024,2048,4096,8192,16384,32768,\\
+ 65536,131072,262144,524288,1048576,2097152,4194304.
+\end{multline}
+For every \(K\), a zeroed full-shaped tensor receives the selected
+coefficients without reoptimization and is normalized.  A fresh \(H\phi_K\)
+contraction gives its Rayleigh energy and full-space residual.  The program
+requires nested cumulative norm and
+\(E_K\ge E_\star-10^{-10}\,\Eh\), and exports all points as CSV.  This protocol
+never converts norm loss into an assumed energy loss.
+
+For the benchmark basis, the coefficient probabilities
+\(p_I=|c_I|^2\) give
+\begin{equation}
+ N_{\mathrm{IPR}}=(\sum_Ip_I^2)^{-1}=5525.89,\qquad
+ N_{\mathrm{Shannon}}=\exp[-\sum_Ip_I\ln p_I]=109228.69.
+\end{equation}
+These scalar counts are representation dependent.  The direct two-basis
+comparison is summarized in Fig.~2 and the complete files
+\path{data/topk_tracker_basis.csv} and
+\path{data/topk_natural_basis.csv}.  \LateBasisSentence
+
+\begin{table*}[h]
+\caption{Representative amplitude-ranked projections.  Energy errors are
+relative to the full Ritz state and every residual is evaluated in the complete
+active-space determinant space.}
+\label{tab:representative-topk}
+\small
+\begin{tabular}{rcccccc}
+\toprule
+& \multicolumn{3}{c}{Benchmark orbitals} & \multicolumn{3}{c}{Natural orbitals} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+\(K\) & \(W_K\) & \(\Delta E_K\) (m\(\Eh\)) & residual (\(\Eh\))
+& \(W_K\) & \(\Delta E_K\) (m\(\Eh\)) & residual (\(\Eh\)) \\
+\midrule
+64 & 0.075498 & 784.161 & 0.840786 & 0.418118 & 406.615 & 0.688659 \\
+512 & 0.191346 & 605.266 & 0.785570 & 0.768507 & 168.983 & 0.472888 \\
+65,536 & 0.726934 & 212.378 & 0.546320 & 0.974209 & 25.545 & 0.207036 \\
+4,194,304 & 0.985678 & 17.705 & 0.186547 & 0.999776 & 0.3488 & 0.027168 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+To decompose the error invariantly under an additive Hamiltonian constant, set
+\(A=H-E_\star I\), \(p=P_Kc\), \(q=(I-P_K)c\), and
+\(W=\langle p|p\rangle\).  Because \(c=p+q\) and
+\(\langle c|A|c\rangle=0\),
+\begin{align}
+ W(E_K-E_\star)&=\langle p|A|p\rangle\\
+ &=-\langle q|A|q\rangle
+ -2\operatorname{Re}\langle p|A|q\rangle.
+ \label{eq:s-decomposition}
+\end{align}
+The analysis contracts \(H\phi_K\).  With \(p=\sqrt{W}\phi_K\), it obtains
+\(\langle p|H|p\rangle\) and \(\langle p|H|c\rangle\), then reconstructs
+\(2\operatorname{Re}\langle p|H|q\rangle\) by subtraction and
+\(\langle q|H|q\rangle\) from the complete-state energy identity.  Thus the
+tail term is an algebraic reconstruction, not a separate \(Hq\) contraction.
+Across both orbital bases and all 17 support sizes, the largest floating-point
+discrepancy on recombining Eq.~(\ref{eq:s-decomposition}) is
+\(6.1\times10^{-14}\,\Eh\).  The positive removed-coupling and negative
+tail-quadratic contributions in Fig.~2 are
+\(-2\operatorname{Re}\langle p|A|q\rangle/W\) and
+\(-\langle q|A|q\rangle/W\), respectively.
+
+\section{Hamiltonian-aware 512-determinant controls}
+
+Five fixed-budget states separate inherited coefficients, coefficient
+relaxation, orbital representation, and support choice.  In each orbital
+representation, the top-512 amplitude support and inherited coefficients are
+taken directly from the full Ritz tensor.  The script
+\path{analysis/rediagonalize_topk_support.py} then builds the complete
+512-by-512 Hamiltonian on exactly that support and diagonalizes it.  In the
+benchmark representation, a separate selected-CI calculation constructs a
+different support: it grows an approximately 80,000-determinant candidate
+space by
+Hamiltonian connections and Epstein--Nesbet estimates, ranks additions by
+secular energy lowering, evaluates removals by the exact Cauchy secular
+equation, accepts only energy-lowering swaps, and rediagonalizes every accepted
+512-dimensional support.  Because the search uses seeded, finite-time
+large-neighborhood restarts, this state is a reproducible candidate, not a
+claim of a unique or globally optimal support.
+
+For all three rediagonalized states, the dense subspace Hamiltonian is built by
+\path{analysis/reference_slater_condon.py}, a compact implementation that
+parses the FCIDUMP and applies explicit fermionic creation and annihilation
+operators.  A separate PySCF embedding places the 512 coefficients into the
+full \(15{,}504^2\) tensor and contracts \(Hc\).  Table~\ref{tab:k512} reports
+the results.  The projected residual tests stationarity only within the listed
+support; the full-space residual tests coupling to all excluded determinants.
+
+\begin{table*}[h]
+\caption{Fixed-budget 512-determinant controls.  Energy error is relative to
+\(E_\star\).  ``Projected'' and ``full'' denote residual norms in the selected
+subspace and complete active-space determinant space.  B and N denote the
+benchmark and natural-orbital representations.}
+\label{tab:k512}
+\small
+\begin{tabular}{lcccc}
+\toprule
+State & Energy (\(\Eh\)) & Error (m\(\Eh\)) & Projected residual (\(\Eh\)) & Full residual (\(\Eh\)) \\
+\midrule
+B: amplitude support, inherited coefficients & \(-116.000343445108\) & 605.266 & --- & 0.786 \\
+B: same support, rediagonalized coefficients & \(-116.146308570453\) & 459.301 & \(2.42\times10^{-13}\) & 0.558 \\
+B: Hamiltonian-guided support, rediagonalized & \(-116.370462675845\) & 235.146 & \(8.68\times10^{-14}\) & 0.215 \\
+N: amplitude support, inherited coefficients & \(-116.436626144441\) & 168.983 & --- & 0.473 \\
+N: same support, rediagonalized coefficients & \(\NaturalKFiveTwelveRelaxedEnergy\) & \(\NaturalKFiveTwelveRelaxedErrorMilli\) & \(\NaturalKFiveTwelveProjectedResidual\) & \(\NaturalKFiveTwelveFullResidual\) \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The same-support energy from the explicit fermionic implementation and PySCF
+differs by \(3.13\times10^{-13}\,\Eh\) in B and
+\(\NaturalKFiveTwelveIndependentDifference\,\Eh\) in N; the corresponding
+difference for the Hamiltonian-guided state is
+\(1.71\times10^{-13}\,\Eh\).  The frozen wave-function CSVs have 512 unique
+rows and squared norms equal to unity within \(4\times10^{-16}\).  The
+construction and validation codes are distinct, and the reported energy is
+always the independently contracted value.
+
+\section{Software environment and reproduction map}
+
+The production state used Python 3.12.1, NumPy 2.5.1, SciPy 1.18.0, h5py
+3.14.0, and PySCF 2.14.0.  The PySCF and h5py wheel SHA-256 values are
+\begin{quote}\small\ttfamily
+37b0bccc55450311a55318cd643e851353331ddeab4fc0c0065e83c905e41502\\
+0cbd41f4e3761f150aa5b662df991868ca533872c95467216f2bec5fcad84882.
+\end{quote}
+Thread controls \texttt{OMP\_NUM\_THREADS}, \texttt{MKL\_NUM\_THREADS},
+\texttt{OPENBLAS\_NUM\_THREADS}, and \texttt{NUMEXPR\_NUM\_THREADS} were set
+to 64.  The top-level \path{README.md} gives copy-paste commands for every
+stage and records expected hashes at each boundary.
+
+\begin{table*}[h]
+\caption{Script-to-result map in the reproduction bundle.}
+\label{tab:scripts}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Script & Principal inputs & Principal outputs \\
+\midrule
+\path{code/initialize_fci_ritz.py} & Primary FCIDUMP & Stage-A vector and direct diagnostics \\
+\path{code/continue_fci_checkpointed.py} & FCIDUMP, explicit NPY checkpoint & Atomic checkpoints, history JSONL, endpoint diagnostics \\
+\path{code/verify_publication_state.py} & FCIDUMP, final vector & Direct/RDM energy, residual, norm, spin, occupations \\
+\path{code/compare_hamiltonian_orbital_equivalence.py} & Two public FCIDUMPs & Orbital rotation and complete-tensor residuals \\
+\path{analysis/analyze_state_compressibility.py} & FCIDUMP, representation-specific vector & Top-\(K\) CSV, decomposition CSV, occupations, summary JSON \\
+\path{analysis/transform_ci_natural_basis.py} & Both FCIDUMPs, rotation, benchmark vector & Natural-basis vector and invariance JSON \\
+\path{analysis/run_natural_basis_replay_v3.sh} & Natural FCIDUMP/vector, frozen occupations & Hash-locked two-basis replay and natural top-512 control \\
+\path{analysis/rediagonalize_topk_support.py} & FCIDUMP, full vector, explicit reference code & Same-support ground state and two-path validation \\
+\path{analysis/guided_512/exp_structure.py}, \path{opt3.py} & FCIDUMP and fixed search parameters & Hamiltonian-guided candidate pool and 512-state CSV \\
+\path{analysis/validate_optimized_512.py} & FCIDUMP, guided 512 state, explicit reference code & Guided-support energy and residuals \\
+\path{analysis/build_results_tex.py} & Gated compact JSON/CSV & Numerical macros used by both documents \\
+\path{figures/build_figures.py} & Frozen compact CSV/JSON only & PDF, SVG, and 450-dpi PNG figures \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+The compact reproduction bundle includes source code, job manifests,
+environment locks, convergence history, verification JSON, the derived
+natural-orbital FCIDUMP and rotation, all figure data, and SHA-256 manifests;
+immutable locations and hashes for both public source FCIDUMPs are given above.
+For anonymous scientific review the 1,922,992,256-byte final vector is supplied
+as the separate artifact \path{fci_ritz_vector.npy} and identified by its full
+hash above.  A persistent, unauthenticated public accession and final author
+metadata must replace the review-only transfer before external submission.
+
+\bibliography{references}
+
+\end{document}

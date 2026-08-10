@@ -1,0 +1,44 @@
+REFERENCE_MATRIX rows=64/512
+REFERENCE_MATRIX rows=128/512
+REFERENCE_MATRIX rows=192/512
+REFERENCE_MATRIX rows=256/512
+REFERENCE_MATRIX rows=320/512
+REFERENCE_MATRIX rows=384/512
+REFERENCE_MATRIX rows=448/512
+REFERENCE_MATRIX rows=512/512
+{
+  "energy_gain_from_coefficient_reoptimization_eh": 0.049634134357276594,
+  "fcidump_sha256": "adb401872023da5b0345ac473a121961d0553f9ddaaa808072423b0a6b24b2aa",
+  "fixed_coefficient_energy_reference_eh": -116.4366261444417,
+  "fixed_vs_optimized_absolute_overlap": 0.8526331724023429,
+  "full_space_residual_pyscf_eh": 0.311254416665089,
+  "full_vector_sha256": "3855dcb7ce8c44b0f6d9c99fc5787aa2db339002b4d50ec2af8a814c45372d77",
+  "gates": {
+    "coefficient_norm": true,
+    "fixed_energy_reproduced": true,
+    "independent_energy_agreement": true,
+    "pyscf_projected_stationarity": true,
+    "rediagonalization_is_variational": true,
+    "reference_projected_stationarity": true,
+    "topk_weight_reproduced": true
+  },
+  "generated_at_unix": 1786257115.6905136,
+  "host": "dp-lbg-18805-23182345",
+  "interpretation": "Only coefficients were optimized; the determinant support is the amplitude-ranked top-K support of the frozen full Ritz vector.",
+  "k": 512,
+  "numpy_version": "2.5.1",
+  "optimized_norm2": 0.9999999999999993,
+  "output_wavefunction_bytes": 33368,
+  "output_wavefunction_sha256": "68cc9a5c2c1b40b2695d48fd9c2ad9e05eea965373ad7bf1311a56b03eafef23",
+  "projected_residual_pyscf_eh": 1.6802223549907726e-13,
+  "projected_residual_reference_eh": 9.586645444942421e-14,
+  "pyscf_version": "2.14.0",
+  "python_version": "3.12.1",
+  "reference_implementation_sha256": "b655e63a9619983c6c7a30e3a82d47fb79bc35f93b7c41e1d6ae7772bc777f42",
+  "retained_norm2": 0.7685072562843137,
+  "same_support_optimized_energy_pyscf_eh": -116.48626027879892,
+  "same_support_optimized_energy_reference_eh": -116.48626027879898,
+  "schema_version": "2fe2s-topk-rediagonalization/v1",
+  "threads": 64,
+  "wall_s": 76.67145133018494
+}
