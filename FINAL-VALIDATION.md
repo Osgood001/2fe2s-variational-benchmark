@@ -32,14 +32,14 @@ Date: 2026-08-09 (Asia/Shanghai)
 ## Document build
 
 - Built on Bohrium with REVTeX 4.2 and BibTeX.
-- Letter: 4 US-letter pages; Supplemental Material: 6 pages; combined: 10
+- Main paper: 4 pages; Supplemental Material: 6 pages; combined: 10
   pages.
 - No unresolved citations/references, fatal TeX errors, or overfull boxes.
 - All PDF fonts are embedded; all pages and both standalone figures were
   rendered and visually inspected.
-- The abstract extracted from the compiled Letter is 548 characters including
-  spaces, below the PRL limit of 600.
-- Letter SHA-256:
+- The abstract extracted from the compiled paper is 548 characters including
+  spaces.
+- Main-paper SHA-256:
   `fd99101fc73d66c324c9f58273c6837fa34058020e171a13b72489fa67542bff`.
 - Supplemental Material SHA-256:
   `c159d54988513bff4d5e2df4af82b23b41f977f257f4355e547fcf02942c7e2d`.

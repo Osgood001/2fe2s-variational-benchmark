@@ -1,93 +1,47 @@
-# [2Fe--2S] variational-Ritz manuscript and reproduction bundle
+# [2Fe--2S] Davidson Ritz variational study
 
-This directory contains the PRL Letter, Supplemental Material, frozen compact
-results, figure source, and executable analysis used for every reported
-observable. Material numerical work and TeX compilation were run on Bohrium.
+This repository contains the paper, Supplemental Material, compact numerical
+results, figures, and executable analysis for a CAS(30e,20o) [2Fe--2S]
+Hamiltonian. Numerical calculations and document builds were run on Bohrium.
 
-## Why this repository exists
+## Main results
 
-The competition submission itself did **not** beat the benchmark: its formal
-512-determinant result was `-116.3704626758453 Eh`. Its execution trace,
-however, described a separate full-space Davidson calculation that had reached
-a substantially lower energy. The trace did not contain that calculation's
-1.79-GiB coefficient vector: its launch omitted the optional vector-output
-argument. We therefore reconstructed the *calculation*, not the missing
-vector, by rerunning the same Hamiltonian, electron sector, PySCF solver, and
-Davidson settings from their deterministic initial guess. The resulting
-normalized state has the directly recomputed Rayleigh quotient
-`-116.60560912042631 Eh`.
+- A normalized full-space CI Ritz vector gives
+  `E = -116.60560912042631 Eh` with residual
+  `||Hc-Ec|| = 6.9016e-7 Eh`.
+- This upper bound is `184.12 microEh` below the HCI submission in
+  [Quantum Advantage Tracker #187](https://github.com/quantum-advantage-tracker/quantum-advantage-tracker.github.io/issues/187).
+- It agrees with the published DMRG value `-116.6056091 Eh`
+  ([Li and Chan, 2017](https://doi.org/10.1021/acs.jctc.7b00270)); it is not a
+  new literature minimum.
+- Natural orbitals increase the norm retained by the largest 512 determinants
+  from `0.191` to `0.769`, but the corresponding inherited-coefficient state
+  remains `168.98 mEh` above the full Ritz energy. Determinant weight alone
+  therefore does not certify energy accuracy.
+- The Davidson solver stopped at its update limit with `converged=false`; the
+  reported number is an explicit variational upper bound, not a certified
+  exact ground-state energy.
 
-This is `0.00018412042631 Eh` (about `184.12 microEh`) below the HCI energy
-`-116.605425 Eh` in [Quantum Advantage Tracker issue
-#187](https://github.com/quantum-advantage-tracker/quantum-advantage-tracker.github.io/issues/187),
-a Tracker submission verified in July 2026. It is therefore a meaningful
-candidate update to the Tracker. It is **not**, however, a new literature-low
-energy: within the reported precision it agrees with the DMRG result
-`-116.6056091 Eh` reported by Li and Chan in 2017
-([DOI: 10.1021/acs.jctc.7b00270](https://doi.org/10.1021/acs.jctc.7b00270)).
-Our present interpretation is that the Tracker has not incorporated that older
-DMRG result for this benchmark.
+![Energy comparison and Davidson convergence](figures/figure1.png)
 
-In short: the reconstructed result improves the value currently displayed by
-the Tracker and is worth submitting there, but it reproduces rather than
-surpasses the best value we found in the existing literature.
+Figure 1 compares the energy with HCI and rounded DMRG values and shows the
+production-stage energy and residual trajectories.
 
-## How the methods differ
+![Basis-dependent determinant compression](figures/figure2.png)
 
-| Method | Wavefunction representation | Main optimization idea |
-|---|---|---|
-| This work | An explicit coefficient vector in the complete fixed-particle/spin determinant space | Matrix-free Davidson/Ritz minimization using full Hamiltonian actions |
-| HCI | A selected sparse list of important determinants | Heat-bath selection, diagonalization in the selected space, and often a perturbative correction |
-| DMRG | A matrix-product state over an ordered set of orbitals | Tensor sweeps with accuracy controlled primarily by bond dimension and discarded weight |
+Figure 2 compares determinant weight, energy error, and residuals in the
+benchmark and natural-orbital representations.
 
-Thus, all three can supply variational upper bounds when their reported energy
-is evaluated from the variational state, but they compress the many-electron
-state in different ways: this calculation uses the complete determinant
-coordinate space, HCI selects determinants, and DMRG compresses entanglement.
-The saved state here is not fully converged, so the number above is an explicit
-variational upper bound, not a certified exact ground-state energy.
+## Method and provenance
 
-## Starting point and provenance
-
-The provenance chain is as follows:
-
-1. The contestant trace revealed a useful numerical route: PySCF 2.14
-   `fci.direct_spin1.FCI` on the public CAS(30e,20o), `(N_alpha,N_beta)=(15,15)`
-   FCIDUMP, with `davidson_only=True`, `pspace_size=800`, `max_space=14`, and a
-   planned 300 Davidson updates. Its printed Ritz sequence crossed the Tracker
-   HCI value, but no full vector was saved.
-2. We independently reran that route from the FCIDUMP. Stage A did **not** load
-   a contestant checkpoint. It used PySCF 2.14's deterministic single-root
-   determinant-space guess. In the `15504 x 15504` CI tensor, its realized
-   unnormalized nonzero entries are
-   `c[0,0] = 1.00001` and `c[15503,15503] = -1e-5`; these correspond to doubly
-   occupied orbital lists `0,...,14` and `5,...,19`, respectively. This is the
-   lowest-Hamiltonian-diagonal determinant selected by PySCF plus its fixed
-   small tie-breaking perturbations, not an energy or wavefunction taken from
-   HCI or DMRG.
-3. Matrix-free Davidson repeatedly applied the full Slater--Condon Hamiltonian
-   to trial vectors, diagonalized the Hamiltonian projected into the current
-   Krylov/Davidson subspace, formed the lowest Ritz vector, and expanded the
-   subspace with a diagonally preconditioned residual. After 110 updates with
-   `max_space=14`, this fresh run produced and saved Stage A:
-   `E=-116.6055095343891 Eh`, residual `2.8201e-3 Eh`, vector SHA-256 prefix
-   `3b20ec2e1aa3`. This newly computed vector—not a vector extracted from the
-   trace—was the first warm start.
-4. We then continued only from explicit saved endpoints: B1 used 2 updates
-   with `max_space=64` (`-116.6055107620259 Eh`); B2 used 16 updates
-   (`-116.6055790186671 Eh`); and C used 160 updates
-   (`-116.60560912042631 Eh`). Each boundary hashes the input/output vector,
-   and the reported energy and residual are recomputed by a fresh `Hc`
-   contraction rather than copied from the eigensolver log.
-
-The original trace is therefore the source of the **solver strategy and the
-hypothesis that the full-space route could beat the Tracker**, not the source
-of any coefficient vector used in the reported calculation. Likewise, we did
-**not** import the 2017 DMRG wavefunction, MPS tensors, coefficients, or energy
-as an optimizer target. The DMRG value was identified only during the later
-literature comparison. The 110/2/16/160 update segmentation and the wider
-restart were pragmatic continuation choices, not a new physical ansatz or a
-literature-derived optimized starting state.
+The calculation starts only from the public FCIDUMP and PySCF 2.14's
+deterministic two-entry CI guess: `c[0,0]=1.00001` and
+`c[15503,15503]=-1e-5`. Matrix-free, diagonally preconditioned Davidson
+iterations apply the full Slater--Condon Hamiltonian in the
+`(N_alpha,N_beta)=(15,15)` sector. The staged update schedule is
+`110/2/16/160`, with explicit hash-identified vectors passed between stages.
+Every reported endpoint is checked by a fresh Hamiltonian contraction; no HCI
+or DMRG wavefunction is used for initialization.
 
 ## Scientific objects
 
@@ -111,14 +65,18 @@ gates for a separately transferred copy.
 
 ## Documents
 
-- `main.tex`: Letter source.
+- [`2fe2s-variational-study.pdf`](2fe2s-variational-study.pdf): main paper.
+- [`2fe2s-variational-study-supplement.pdf`](2fe2s-variational-study-supplement.pdf):
+  Supplemental Material.
+- [`2fe2s-variational-study-complete.pdf`](2fe2s-variational-study-complete.pdf):
+  combined paper and supplement.
+- `main.tex`: paper source.
 - `supplement.tex`: equations, complete simulation protocol, numerical checks,
   and script-to-result map.
 - `results.tex`: macros generated only from frozen numerical outputs.
 - `reviews/`: same-referee reports and revision records.
-- `variational-benchmark-issue-draft.md`: local Quantum Advantage Tracker issue
-  draft; authors, institutions, and public accession remain deliberate human
-  approval fields.
+- `variational-benchmark-issue-draft.md`: Quantum Advantage Tracker submission
+  text for [issue #238](https://github.com/quantum-advantage-tracker/quantum-advantage-tracker.github.io/issues/238).
 
 ## Exact staged Davidson calculation
 

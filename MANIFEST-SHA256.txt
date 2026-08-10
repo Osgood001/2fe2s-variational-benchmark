@@ -1,6 +1,6 @@
-7546e43371b20d4ad15568be3183cd4b96c18e39e6664f52aa2335ad87acc726  ./2fe2s-prl-complete.pdf
-fd99101fc73d66c324c9f58273c6837fa34058020e171a13b72489fa67542bff  ./2fe2s-prl-letter.pdf
-c159d54988513bff4d5e2df4af82b23b41f977f257f4355e547fcf02942c7e2d  ./2fe2s-prl-supplement.pdf
+7546e43371b20d4ad15568be3183cd4b96c18e39e6664f52aa2335ad87acc726  ./2fe2s-variational-study-complete.pdf
+fd99101fc73d66c324c9f58273c6837fa34058020e171a13b72489fa67542bff  ./2fe2s-variational-study.pdf
+c159d54988513bff4d5e2df4af82b23b41f977f257f4355e547fcf02942c7e2d  ./2fe2s-variational-study-supplement.pdf
 1458d0dea462da557b5eba92cf03abdda7d9496eae5f18d1ba3094dc8c4e1483  ./FINAL-VALIDATION.md
 1edb4d482e42720bc07ccbe7cbb5a44882fc1d61252d4dfd5bc1569d75c83329  ./README.md
 64bf636a361ed6425855e5d5545ed093828abb7c8aaa0117bed8dd2f157e35a0  ./analysis/analyze_compressibility.py
