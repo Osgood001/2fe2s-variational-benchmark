@@ -9,8 +9,11 @@ observable. Material numerical work and TeX compilation were run on Bohrium.
 The competition submission itself did **not** beat the benchmark: its formal
 512-determinant result was `-116.3704626758453 Eh`. Its execution trace,
 however, described a separate full-space Davidson calculation that had reached
-a substantially lower energy. We reconstructed that route and asked an agent
-to continue the same calculation with explicit checkpoints. The resulting
+a substantially lower energy. The trace did not contain that calculation's
+1.79-GiB coefficient vector: its launch omitted the optional vector-output
+argument. We therefore reconstructed the *calculation*, not the missing
+vector, by rerunning the same Hamiltonian, electron sector, PySCF solver, and
+Davidson settings from their deterministic initial guess. The resulting
 normalized state has the directly recomputed Rayleigh quotient
 `-116.60560912042631 Eh`.
 
@@ -46,15 +49,45 @@ variational upper bound, not a certified exact ground-state energy.
 
 ## Starting point and provenance
 
-The final production continuation was warm-started from an intermediate
-full-space Davidson vector reconstructed while following the contestant
-trace. That intermediate state was already below the Tracker HCI value. We did
-**not** import the 2017 DMRG wavefunction, MPS tensors, or coefficients, and did
-not initialize the solver from the published DMRG energy. The DMRG number was
-identified during the subsequent literature comparison and is used here to
-interpret the result, not to generate it. Consequently, the numerical lineage
-supports a Tracker update, while the literature comparison prevents us from
-claiming a new state of the art.
+The provenance chain is as follows:
+
+1. The contestant trace revealed a useful numerical route: PySCF 2.14
+   `fci.direct_spin1.FCI` on the public CAS(30e,20o), `(N_alpha,N_beta)=(15,15)`
+   FCIDUMP, with `davidson_only=True`, `pspace_size=800`, `max_space=14`, and a
+   planned 300 Davidson updates. Its printed Ritz sequence crossed the Tracker
+   HCI value, but no full vector was saved.
+2. We independently reran that route from the FCIDUMP. Stage A did **not** load
+   a contestant checkpoint. It used PySCF 2.14's deterministic single-root
+   determinant-space guess. In the `15504 x 15504` CI tensor, its realized
+   unnormalized nonzero entries are
+   `c[0,0] = 1.00001` and `c[15503,15503] = -1e-5`; these correspond to doubly
+   occupied orbital lists `0,...,14` and `5,...,19`, respectively. This is the
+   lowest-Hamiltonian-diagonal determinant selected by PySCF plus its fixed
+   small tie-breaking perturbations, not an energy or wavefunction taken from
+   HCI or DMRG.
+3. Matrix-free Davidson repeatedly applied the full Slater--Condon Hamiltonian
+   to trial vectors, diagonalized the Hamiltonian projected into the current
+   Krylov/Davidson subspace, formed the lowest Ritz vector, and expanded the
+   subspace with a diagonally preconditioned residual. After 110 updates with
+   `max_space=14`, this fresh run produced and saved Stage A:
+   `E=-116.6055095343891 Eh`, residual `2.8201e-3 Eh`, vector SHA-256 prefix
+   `3b20ec2e1aa3`. This newly computed vector—not a vector extracted from the
+   trace—was the first warm start.
+4. We then continued only from explicit saved endpoints: B1 used 2 updates
+   with `max_space=64` (`-116.6055107620259 Eh`); B2 used 16 updates
+   (`-116.6055790186671 Eh`); and C used 160 updates
+   (`-116.60560912042631 Eh`). Each boundary hashes the input/output vector,
+   and the reported energy and residual are recomputed by a fresh `Hc`
+   contraction rather than copied from the eigensolver log.
+
+The original trace is therefore the source of the **solver strategy and the
+hypothesis that the full-space route could beat the Tracker**, not the source
+of any coefficient vector used in the reported calculation. Likewise, we did
+**not** import the 2017 DMRG wavefunction, MPS tensors, coefficients, or energy
+as an optimizer target. The DMRG value was identified only during the later
+literature comparison. The 110/2/16/160 update segmentation and the wider
+restart were pragmatic continuation choices, not a new physical ansatz or a
+literature-derived optimized starting state.
 
 ## Scientific objects
 
