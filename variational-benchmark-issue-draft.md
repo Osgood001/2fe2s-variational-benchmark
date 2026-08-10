@@ -8,41 +8,41 @@ Davidson convergence, an exact ground-state energy, or quantum advantage.
 
 Proposed issue title:
 
-> Davidson Ritz [2Fe-2S] (30e, 20o)
+> [2Fe-2S] (30e, 20o) Davidson Ritz
 
-## Name
+### Name
 
-[2Fe-2S] (30e, 20o) explicit Davidson Ritz bound
+[2Fe-2S] (30e, 20o) Davidson Ritz
 
-## Hamiltonian
+### Hamiltonian
 
 2fe_2s_30e_20o
 
-## Qubits
+### Qubits
 
 _No response_
 
-## Gates
+### Gates
 
 _No response_
 
-## Energy (Eh)
+### Energy (Eh)
 
 -116.60560912042631
 
-## Low error bound (Eh)
+### Low error bound (Eh)
 
 _No response_
 
-## High error bound (Eh)
+### High error bound (Eh)
 
 _No response_
 
-## Method
+### Method
 
 Checkpointed full-space Davidson Ritz (PySCF 2.14.0)
 
-## Method proof
+### Method proof
 
 Reproduction repository:
 https://github.com/Osgood001/2fe2s-variational-benchmark
@@ -90,36 +90,37 @@ as a convergence diagnostic and is not converted into an unsupported
 two-sided error bar. The direct Rayleigh quotient remains a variational upper
 bound in the stated particle-number and spin-projection sector.
 
-Final-vector archive:
-{{FINAL_VECTOR_ARCHIVE_URL}}
+The exact final vector is identified above by its SHA-256. It is not committed
+to the reproduction repository because it is 1.79 GiB; a separate durable
+archive can be added during verification if requested.
 
-## Quantum runtime (seconds)
+### Quantum runtime (seconds)
 
 _No response_
 
-## Classical runtime (seconds)
+### Classical runtime (seconds)
 
 32746
 
-## Compute resources (quantum)
+### Compute resources (quantum)
 
 _No response_
 
-## Compute resources (classical)
+### Compute resources (classical)
 
 64 CPU threads; 512 GiB memory allocation; PySCF 2.14.0
 
-## Notes
+### Notes
 
 Explicit unconverged Ritz vector; fresh-action replay
 
-## Authors
+### Authors
 
-{{APPROVED_AUTHORS}}
+Shigang Ou
 
-## Institutions
+### Institutions
 
-{{APPROVED_INSTITUTIONS}}
+Institute of Physics, Chinese Academy of Sciences
 
 ---
 
@@ -144,10 +145,8 @@ time-to-solution benchmark.
 ## Pre-submission checklist — do not paste into the Tracker form
 
 - [ ] Review and approve the scientific wording.
-- [ ] Replace `{{APPROVED_AUTHORS}}` and `{{APPROVED_INSTITUTIONS}}` after
-      contribution/attribution approval.
 - [ ] Deposit the exact 1.79-GiB final vector in a durable, unauthenticated
-      archive and replace `{{FINAL_VECTOR_ARCHIVE_URL}}`.
+      archive if the Tracker maintainers require it for verification.
 - [ ] Confirm that the downloaded archive vector matches SHA-256
       `45e63bb63cd10e953260b6f5dabb8a1dda5518fbf5959002c23888dacb599945`.
 - [ ] Recheck the live Tracker incumbent immediately before submission.
